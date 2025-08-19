@@ -31,6 +31,18 @@ echo "========================================="
 echo "  Docker 服务一键部署脚本（定制媒体库版）"
 echo "========================================="
 
+# --- 检测本机IP地址 ---
+echo -e "\n正在检测本机IP地址..."
+# 尝试获取非127.0.0.1的IPV4地址
+NAS_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v "127.0.0.1" | head -n 1)
+
+if [ -z "$NAS_IP" ]; then
+    echo "警告: 无法自动获取IP地址，将使用localhost代替"
+    NAS_IP="localhost"
+else
+    echo "检测到本机IP地址: $NAS_IP"
+fi
+
 # 脚本所在目录将作为所有文件的根目录
 DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DOCKER_BASE_DIR="$DEPLOY_DIR/docker"
@@ -177,7 +189,7 @@ docker run -d \
   -e PGID=$PGID \
   -e TZ=$DEFAULT_TZ \
   -v $MEDIA_BASE_DIR:/srv/media \
-  -v /:/srv/system \
+  -v /:/srv \
   -v $FILEBROWSER_CONFIG_DIR/config/config.json:/etc/config.json \
   -v $FILEBROWSER_CONFIG_DIR/data/database.db:/etc/database.db \
   ysx88/filebrowser:latest
@@ -284,12 +296,12 @@ if [ $? -eq 0 ]; then
     echo -e "\n========================================="
     echo "所有服务部署成功！"
     echo "你可以通过以下地址访问它们："
-    echo "Portainer:    http://你的NAS_IP:$PORTTAINER_PORT"
-    echo "Filebrowser:  http://你的NAS_IP:$FILEBROWSER_PORT"
-    echo "Qbittorrent:  http://你的NAS_IP:$QBITTORRENT_WEBUI_PORT"
-    echo "Emby:        http://你的NAS_IP:$EMBY_PORT"
-    echo "MoviePilot:  http://你的NAS_IP:$MOVIEPILOT_PORT"
-    echo "CookieCloud: http://你的NAS_IP:$COOKIECLOUD_PORT"
+    echo "Portainer:    http://${NAS_IP}:${PORTTAINER_PORT}"
+    echo "Filebrowser:  http://${NAS_IP}:${FILEBROWSER_PORT}"
+    echo "Qbittorrent:  http://${NAS_IP}:${QBITTORRENT_WEBUI_PORT}"
+    echo "Emby:        http://${NAS_IP}:${EMBY_PORT}"
+    echo "MoviePilot:  http://${NAS_IP}:${MOVIEPILOT_PORT}"
+    echo "CookieCloud: http://${NAS_IP}:${COOKIECLOUD_PORT}"
     echo "========================================="
     echo -e "\n媒体库目录结构："
     echo "下载目录: $MEDIA_DOWNLOADS_PATH"
